@@ -1,0 +1,2 @@
+configurationchart-test1:自身の環境の構成図
+configurationchart-test2:動画の構成図
