@@ -1,0 +1,261 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: aws-study-template
+
+Parameters:
+  KeyName:
+    Description: The EC2 KeyPair to allow SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+
+  RDSUserID:
+    Type: 'String'
+    Description: The username for the RDS instance
+
+  RDSPassword:
+    Type: 'String'
+    NoEcho: true
+    Description: The user password for the RDS instance
+
+
+Resources:
+  
+  AwsStudyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: aws-study-VPC
+
+  AwsStudyInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: aws-study-internet-gateway
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref AwsStudyVPC
+      InternetGatewayId: !Ref AwsStudyInternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AwsStudyVPC
+      Tags:
+        - Key: Name
+          Value: aws-study-rtb-public
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref AwsStudyInternetGateway
+
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref AwsStudyPublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref AwsStudyPublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+
+  AwsStudyEC2SG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref AwsStudyVPC
+      GroupDescription: aws-study-EC2-SG created 2025-04-21
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          ToPort: 22
+          FromPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          ToPort: 80
+          FromPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          ToPort: 8080
+          FromPort: 8080
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: aws-study-ec2-sg
+  
+  AwsStudyPublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref AwsStudyVPC
+      AvailabilityZone: "ap-northeast-1a"
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: aws-study-public-subnet1
+  
+  AwsStudyPublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref AwsStudyVPC
+      AvailabilityZone: "ap-northeast-1c"
+      CidrBlock: 10.0.3.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: aws-study-public-subnet2
+
+
+  AwsStudyEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-05206bf8aecfc7ae6
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: !Ref AwsStudyPublicSubnet1
+          GroupSet:
+            -  !Ref AwsStudyEC2SG
+      Tags:
+        - Key: Name
+          Value: aws-study-EC2
+
+  AwsStudyPrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref AwsStudyVPC
+      AvailabilityZone: "ap-northeast-1a"
+      CidrBlock: 10.0.1.0/24
+      Tags:
+        - Key: Name
+          Value: aws-study-private-subnet1
+
+  AwsStudyPrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref AwsStudyVPC
+      AvailabilityZone: "ap-northeast-1c"
+      CidrBlock: 10.0.2.0/24
+      Tags:
+        - Key: Name
+          Value: aws-study-private-subnet2
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+        - !Ref AwsStudyPrivateSubnet1
+        - !Ref AwsStudyPrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: DBSubnetGroup
+
+  AwsStudyRDS:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: '5'
+      StorageType: gp2
+      DBInstanceClass: db.t3.micro
+      Engine: mysql
+      EngineVersion: "8.0.39"
+      MasterUsername: !Ref RDSUserID
+      MasterUserPassword: !Ref RDSPassword
+      BackupRetentionPeriod: '1'
+      DBName: AWSstudy
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref AwsStudyRDSSG
+      PubliclyAccessible: false
+      MultiAZ: false
+      DeletionProtection: false
+      Tags:
+        - Key: Name
+          Value: aws-study-RDS-instance
+
+  AwsStudyRDSSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow inbound MySQL connection from EC2"
+      VpcId: !Ref AwsStudyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          ToPort: 3306
+          FromPort: 3306
+          SourceSecurityGroupId: !Ref AwsStudyEC2SG
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: aws-study-RDS-SG
+
+  AwsStudyALBSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow HTTP access to ALB"
+      VpcId: !Ref AwsStudyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: aws-study-ALB-SG
+
+  AwsStudyTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 8080
+      Protocol: HTTP
+      VpcId: !Ref AwsStudyVPC
+      TargetType: instance
+      HealthCheckPort: "8080"
+      HealthCheckPath: /
+      Name: aws-study-target-group
+      Targets:
+        - Id: !Ref AwsStudyEC2
+
+  AwsStudyALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: aws-study-alb
+      Subnets:
+        - !Ref AwsStudyPublicSubnet1
+        - !Ref AwsStudyPublicSubnet2
+      SecurityGroups:
+        - !Ref AwsStudyALBSG
+      Scheme: internet-facing
+      Type: application
+      IpAddressType: ipv4
+      Tags:
+        - Key: Name
+          Value: aws-study-alb
+
+  AwsStudyALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref AwsStudyALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref AwsStudyTargetGroup
