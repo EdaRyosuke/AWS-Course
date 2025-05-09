@@ -9,6 +9,12 @@ Parameters:
     Default: aws-study
     Description: Common prefix for resource names
 
+  SSHLocation:
+    Description: IP address range that can SSH to EC2 (e.g. 203.0.113.0/32)
+    Type: String
+    Default: 0.0.0.0/32
+    NoEcho: true
+
   KeyName:
     Description: The EC2 KeyPair to allow SSH access to the instance
     Type: AWS::EC2::KeyPair::KeyName
@@ -87,7 +93,7 @@ Resources:
         - IpProtocol: tcp
           ToPort: 22
           FromPort: 22
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref SSHLocation
         - IpProtocol: tcp
           ToPort: 80
           FromPort: 80
