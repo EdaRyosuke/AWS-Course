@@ -3,11 +3,23 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: aws-study-template
 
 Parameters:
+
+  Prefix:
+    Type: String
+    Default: aws-study
+    Description: Common prefix for resource names
+
+  SSHLocation:
+    Description: IP address range that can SSH to EC2 (e.g. 203.0.113.0/32)
+    Type: String
+    Default: 0.0.0.0/32
+    NoEcho: true
+
   KeyName:
     Description: The EC2 KeyPair to allow SSH access to the instance
     Type: AWS::EC2::KeyPair::KeyName
 
-  RDSUserID:
+  RDSUserName:
     Type: 'String'
     Description: The username for the RDS instance
 
@@ -15,7 +27,6 @@ Parameters:
     Type: 'String'
     NoEcho: true
     Description: The user password for the RDS instance
-
 
 Resources:
   
@@ -28,14 +39,14 @@ Resources:
       InstanceTenancy: default
       Tags:
         - Key: Name
-          Value: aws-study-VPC
+          Value: !Sub "${Prefix}-VPC"
 
   AwsStudyInternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: aws-study-internet-gateway
+          Value: !Sub "${Prefix}-internet-gateway"
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -49,7 +60,7 @@ Resources:
       VpcId: !Ref AwsStudyVPC
       Tags:
         - Key: Name
-          Value: aws-study-rtb-public
+          Value: !Sub "${Prefix}-rtb-public"
 
   PublicRoute:
     Type: AWS::EC2::Route
@@ -60,7 +71,7 @@ Resources:
       GatewayId: !Ref AwsStudyInternetGateway
 
 
-  PublicSubnetRouteTableAssociation:
+  PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref AwsStudyPublicSubnet1
@@ -77,26 +88,22 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       VpcId: !Ref AwsStudyVPC
-      GroupDescription: aws-study-EC2-SG created 2025-04-21
+      GroupDescription: !Sub "${Prefix}-EC2-SG created 2025-04-21"
       SecurityGroupIngress:
         - IpProtocol: tcp
           ToPort: 22
           FromPort: 22
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref SSHLocation
         - IpProtocol: tcp
           ToPort: 80
           FromPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          ToPort: 8080
-          FromPort: 8080
           CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: aws-study-ec2-sg
+          Value: !Sub "${Prefix}-ec2-sg"
   
   AwsStudyPublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -107,7 +114,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: aws-study-public-subnet1
+          Value: !Sub "${Prefix}-public-subnet1"
   
   AwsStudyPublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -118,7 +125,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: aws-study-public-subnet2
+          Value: !Sub "${Prefix}-public-subnet2"
 
 
   AwsStudyEC2:
@@ -135,7 +142,7 @@ Resources:
             -  !Ref AwsStudyEC2SG
       Tags:
         - Key: Name
-          Value: aws-study-EC2
+          Value: !Sub "${Prefix}-EC2"
 
   AwsStudyPrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -145,7 +152,7 @@ Resources:
       CidrBlock: 10.0.1.0/24
       Tags:
         - Key: Name
-          Value: aws-study-private-subnet1
+          Value: !Sub "${Prefix}-private-subnet1"
 
   AwsStudyPrivateSubnet2:
     Type: AWS::EC2::Subnet
@@ -155,7 +162,7 @@ Resources:
       CidrBlock: 10.0.2.0/24
       Tags:
         - Key: Name
-          Value: aws-study-private-subnet2
+          Value: !Sub "${Prefix}-private-subnet2"
 
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
@@ -176,7 +183,7 @@ Resources:
       DBInstanceClass: db.t3.micro
       Engine: mysql
       EngineVersion: "8.0.39"
-      MasterUsername: !Ref RDSUserID
+      MasterUsername: !Ref RDSUserName
       MasterUserPassword: !Ref RDSPassword
       BackupRetentionPeriod: '1'
       DBName: AWSstudy
@@ -188,7 +195,7 @@ Resources:
       DeletionProtection: false
       Tags:
         - Key: Name
-          Value: aws-study-RDS-instance
+          Value: !Sub "${Prefix}-RDS-instance"
 
   AwsStudyRDSSG:
     Type: AWS::EC2::SecurityGroup
@@ -205,7 +212,7 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: aws-study-RDS-SG
+          Value: !Sub "${Prefix}-RDS-SG"
 
   AwsStudyALBSG:
     Type: AWS::EC2::SecurityGroup
@@ -219,7 +226,7 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: aws-study-ALB-SG
+          Value: !Sub "${Prefix}-ALB-SG"
 
   AwsStudyTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -230,14 +237,14 @@ Resources:
       TargetType: instance
       HealthCheckPort: "8080"
       HealthCheckPath: /
-      Name: aws-study-target-group
+      Name: !Sub "${Prefix}-target-group"
       Targets:
         - Id: !Ref AwsStudyEC2
 
   AwsStudyALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: aws-study-alb
+      Name: !Sub "${Prefix}-alb"
       Subnets:
         - !Ref AwsStudyPublicSubnet1
         - !Ref AwsStudyPublicSubnet2
@@ -248,7 +255,7 @@ Resources:
       IpAddressType: ipv4
       Tags:
         - Key: Name
-          Value: aws-study-alb
+          Value: !Sub "${Prefix}-alb"
 
   AwsStudyALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
