@@ -328,14 +328,14 @@ Resources:
   WebACLAssociation:
     Type: AWS::WAFv2::WebACLAssociation
     Properties:
-      ResourceArn: !GetAtt AwsStudyALB.LoadBalancerArn
+      ResourceArn: !Ref AwsStudyALB
       WebACLArn: !GetAtt AwsStudyWAFWebACL.Arn
 
   AwsStudyWAFLoggingConfiguration:
     Type: AWS::WAFv2::LoggingConfiguration
     Properties:
       LogDestinationConfigs:
-        - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:aws-waf-logs-group-${Prefix}"
+        - !GetAtt AwsStudyWAFLogGroup.Arn
       ResourceArn: !GetAtt AwsStudyWAFWebACL.Arn
 
   AwsStudyWAFLogGroup:
