@@ -95,8 +95,8 @@ Resources:
           FromPort: 22
           CidrIp: !Ref SSHLocation
         - IpProtocol: tcp
-          ToPort: 80
-          FromPort: 80
+          ToPort: 8080
+          FromPort: 8080
           CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: -1
@@ -186,7 +186,7 @@ Resources:
       MasterUsername: !Ref RDSUserName
       MasterUserPassword: !Ref RDSPassword
       BackupRetentionPeriod: '1'
-      DBName: AWSstudy
+      DBName: awsstudy
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups:
         - !Ref AwsStudyRDSSG
@@ -266,3 +266,107 @@ Resources:
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref AwsStudyTargetGroup
+
+  AwsStudySNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${Prefix}-topic"
+      Subscription:
+        - Protocol: email
+          Endpoint: coedpft@gmail.com
+      Tags:
+        - Key: Name
+          Value: !Sub "${Prefix}-sns-topic"
+
+  EC2CPUUtilizationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${Prefix}-cpu-utilization-alarm"
+      AlarmDescription: !Sub "${Prefix}-EC2のCPU使用率が70%以上になりました"
+      Namespace: "AWS/EC2"
+      Dimensions:
+        - Name: "InstanceId"
+          Value: !Ref AwsStudyEC2
+      MetricName: "CPUUtilization"
+      Unit: "Percent"
+      Period: 300
+      Statistic: "Average"
+      Threshold: 70
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 2
+      TreatMissingData: "notBreaching"
+      ActionsEnabled: true
+      AlarmActions:
+        - !GetAtt AwsStudySNSTopic.TopicArn
+
+  AwsStudyWAFWebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !Sub "${Prefix}-web-acl"
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub "${Prefix}-web-acl"
+      Rules:
+        - Name: AWS-AWSManagedRulesCommonRuleset
+          Priority: 0
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesCommonRuleSet
+
+  WebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Ref AwsStudyALB
+      WebACLArn: !GetAtt AwsStudyWAFWebACL.Arn
+
+  AwsStudyWAFLoggingConfiguration:
+    Type: AWS::WAFv2::LoggingConfiguration
+    Properties:
+      LogDestinationConfigs:
+        - !GetAtt AwsStudyWAFLogGroup.Arn
+      ResourceArn: !GetAtt AwsStudyWAFWebACL.Arn
+
+  AwsStudyWAFLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "aws-waf-logs-group-${Prefix}"
+      RetentionInDays: 30
+
+  AwsStudyWAFLogFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: '{ $.action = "BLOCK" }'
+      LogGroupName: !Ref AwsStudyWAFLogGroup
+      MetricTransformations:
+        - MetricName: !Sub "${Prefix}-WAFBlockedRequests"
+          MetricNamespace: "MyApp/Logs"
+          MetricValue: "1"
+
+  AwsStudyWAFBlockedRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${Prefix}-WAF-Blocked-Requests-Alarm"
+      AlarmDescription: "WAFでブロックされたリクエストが発生しました"
+      Namespace: "MyApp/Logs"
+      MetricName: !Sub "${Prefix}-WAFBlockedRequests"
+      Statistic: "Sum"
+      Period: 300
+      Threshold: 1
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      ActionsEnabled: true
+      AlarmActions:
+        - !GetAtt AwsStudySNSTopic.TopicArn
