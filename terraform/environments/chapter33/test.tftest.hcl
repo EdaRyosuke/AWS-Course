@@ -150,9 +150,9 @@ run "check_rds" {
     }
 
     variables {
-        private_subnet_list = ["subnet-012345678901test3", "subnet-012345678901test4"]  # ← あなたの構成に合わせて書き換え
-        vpc_id = "vpc-0123456789abcdef0"                                    # ← あなたの構成に合わせて書き換え
-        ec2_sg = "sg-012345678901test1"                                     # ← EC2用のセキュリティグループ
+        private_subnet_list = ["subnet-012345678901test3", "subnet-012345678901test4"]
+        vpc_id = "vpc-0123456789abcdef0"
+        ec2_sg = "sg-012345678901test1"
     }
 
     assert {
