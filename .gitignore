@@ -2,3 +2,5 @@
 .tfvars
 .terraform/
 .log
+.tfstate
+.tfstate.backup
