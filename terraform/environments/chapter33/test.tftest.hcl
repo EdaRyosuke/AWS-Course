@@ -35,7 +35,7 @@ run "check_ec2" {
 
     variables {
         vpc_id = "vpc-0123456789abcdef0"
-        SSHlocation = "0.0.0.0/0"
+        ssh_location = "0.0.0.0/0"
         key_name = "AWSkey"
         public_subnet1a_id = "subnet-01234567890ftest1"
         env = "test"
@@ -128,7 +128,7 @@ run "check_network" {
 
     assert {
         condition = aws_subnet.private_1a.availability_zone == "ap-northeast-1a"
-        error_message = "プライベートサブネット1cのAZが正しくありません"
+        error_message = "プライベートサブネット1aのAZが正しくありません"
     }
 
     assert {

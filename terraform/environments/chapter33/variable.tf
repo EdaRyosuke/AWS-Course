@@ -8,7 +8,7 @@ variable "key_name" {
   type        = string
 }
 
-variable "SSHlocation" {
+variable "ssh_location" {
   description = "SSHアクセス許可のIP（例：0.0.0.0/0）"
   type        = string
 }
