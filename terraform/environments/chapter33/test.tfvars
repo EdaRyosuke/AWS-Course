@@ -1,5 +1,0 @@
-env         = "test"
-key_name    = "AWSkey"
-ssh_location = "0.0.0.0/0"
-DBusername  = "root"
-DBpassword  = "rootroot"
