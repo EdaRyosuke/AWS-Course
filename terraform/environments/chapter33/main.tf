@@ -9,6 +9,7 @@ module "ec2" {
   key_name           = var.key_name
   vpc_id             = module.network.vpc_id
   public_subnet1a_id = module.network.public_subnet1a_id
+  public_subnet1c_id = module.network.public_subnet1c_id
   ssh_location       = var.ssh_location
 }
 
