@@ -38,6 +38,7 @@ run "check_ec2" {
     ssh_location       = "0.0.0.0/0"
     key_name           = "AWSkey"
     public_subnet1a_id = "subnet-01234567890ftest1"
+    public_subnet1c_id = "subnet-01234567890ftest2"
     env                = "test"
   }
 
