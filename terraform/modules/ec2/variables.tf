@@ -12,6 +12,8 @@ variable "vpc_id" {}
 
 variable "public_subnet1a_id" {}
 
+variable "public_subnet1c_id" {}
+
 variable "ssh_location" {
   description = "SSH接続するIPのCIDRブロック"
   type        = string
