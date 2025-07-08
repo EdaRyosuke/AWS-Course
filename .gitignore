@@ -1,6 +1,6 @@
 .DS_Store
-.tfvars
+*.tfvars
 .terraform/
-.log
-.tfstate
-.tfstate.backup
+*.log
+*.tfstate
+*.tfstate.backup
