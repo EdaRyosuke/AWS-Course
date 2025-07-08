@@ -20,6 +20,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: ap-northeast-1
+      S3_BUCKET: a1-mybucket
+      TFSTATE_KEY: chapter33/terraform.tfstate
 
     defaults:
       run:
@@ -39,8 +41,12 @@ jobs:
           ${{ secrets.TEST_TFVARS }}
           EOF
       
-      - name: Terraform Init
-        run: terraform init
+      - name: Terraform Init (with S3 buckend)
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ env.S3_BUCKET }}" \
+            -backend-config="key=${{ env.TFSTATE_KEY }}" \
+            -backend-config="region=${{ env.AWS_DEFAULT_REGION }}"
       
       - name: Terraform Test
         run: terraform test -var-file test.tfvars
