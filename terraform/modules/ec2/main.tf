@@ -36,15 +36,3 @@ resource "aws_instance" "main" {
     Name = "${var.env}-ec2"
   }
 }
-
-resource "aws_instance" "sub" {
-  ami                         = "ami-05206bf8aecfc7ae6"
-  instance_type               = "t2.micro"
-  key_name                    = var.key_name
-  associate_public_ip_address = true
-  subnet_id                   = var.public_subnet1c_id
-  vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
-  tags = {
-    Name = "${var.env}-ec2-sub"
-  }
-}
