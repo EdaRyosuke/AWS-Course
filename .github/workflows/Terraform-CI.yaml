@@ -78,8 +78,8 @@ jobs:
             ${{ secrets.TEST_TFVARS }}
             EOF
 
-      - name: Terraform Init (with S3 buckend)
-        run: terraform init -reconfigure
+      - name: Terraform Init
+        run: terraform init
 
       - name: Terraform Apply
         run: terraform apply -var-file test.tfvars -auto-approve
