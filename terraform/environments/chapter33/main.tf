@@ -10,7 +10,7 @@ module "ec2" {
   vpc_id             = module.network.vpc_id
   public_subnet1a_id = module.network.public_subnet1a_id
   public_subnet1c_id = module.network.public_subnet1c_id
-  ssh_location        = var.ssh_location
+  ssh_location       = var.ssh_location
 }
 
 module "rds" {
@@ -27,23 +27,23 @@ module "rds" {
 }
 
 module "alb" {
-  source = "../../modules/alb"
-  vpc_id = module.network.vpc_id
+  source             = "../../modules/alb"
+  vpc_id             = module.network.vpc_id
   public_subnet1a_id = module.network.public_subnet1a_id
   public_subnet1c_id = module.network.public_subnet1c_id
-  env = var.env
-  instance_main_id = module.ec2.instance_main_id
+  env                = var.env
+  instance_main_id   = module.ec2.instance_main_id
 }
 
 module "monitoring" {
-  source = "../../modules/monitoring"
-  alert_email = var.alert_email
+  source           = "../../modules/monitoring"
+  alert_email      = var.alert_email
   instance_main_id = module.ec2.instance_main_id
 }
 
 module "waf" {
-  source = "../../modules/waf"
-  env = var.env
-  alb_arn = module.alb.alb_main_arn
+  source        = "../../modules/waf"
+  env           = var.env
+  alb_arn       = module.alb.alb_main_arn
   sns_topic_arn = module.monitoring.sns_topic_arn
 }

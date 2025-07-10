@@ -8,11 +8,19 @@ variable "key_name" {
   type        = string
 }
 
-variable "vpc_id" {}
+variable "vpc_id" {
+  description = "VPCのID"
+  type        = string
+}
 
-variable "public_subnet1a_id" {}
+variable "public_subnet1a_id" {
+  description = "パブリックサブネット1aのID"
+  type        = string
+}
 
-variable "public_subnet1c_id" {}
+variable "public_subnet1c_id" {
+  description = "パブリックサブネット1cのID"
+}
 
 variable "ssh_location" {
   description = "SSH接続するIPのCIDRブロック"

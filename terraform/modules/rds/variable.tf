@@ -3,16 +3,27 @@ variable "env" {
   type        = string
 }
 
-variable "private_subnet_list" {}
+variable "private_subnet_list" {
+  description = "DBで使用するプライベートサブネットリスト"
+  type        = list(string)
+}
 
 variable "DBusername" {
-  type = string
+  description = "DBユーザーネーム"
+  type        = string
 }
 
 variable "DBpassword" {
-  type = string
+  description = "DBパスワード"
+  type        = string
 }
 
-variable "vpc_id" {}
+variable "vpc_id" {
+  description = "VPCのID"
+  type        = string
+}
 
-variable "ec2_sg" {}
+variable "ec2_sg" {
+  description = "EC2のセキュリティグループ"
+  type        = string
+}

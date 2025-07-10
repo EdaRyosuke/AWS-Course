@@ -26,4 +26,5 @@ variable "DBpassword" {
 
 variable "alert_email" {
   description = "アラート用Email"
+  type        = string
 }
