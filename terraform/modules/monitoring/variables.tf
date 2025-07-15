@@ -1,5 +1,9 @@
 variable "alert_email" {
-  type = string
+  description = "SNSトピック送信先Emailアドレス"
+  type        = string
 }
 
-variable "instance_main_id" {}
+variable "instance_main_id" {
+  description = "EC2インスタンス(メイン)のID"
+  type        = string
+}
