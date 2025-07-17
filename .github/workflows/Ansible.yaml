@@ -39,5 +39,5 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-          ansible-playbook -i ansible/inventory.ini ansible/install_java.yaml
+          ansible-playbook -i Ansible/inventory.ini Ansible/install_java.yaml
 
