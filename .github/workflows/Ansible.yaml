@@ -3,8 +3,8 @@ name: Ansible
 on:
   pull_request:
     paths:
-      - 'Ansible/**/*.yaml'
-      - 'Ansible/**/**/*.yaml'
+      - 'Ansible/*.yaml'
+      - 'Ansible/*.ini'
       - 'terraform/module/**/*.tf'
       - '.github/workflows/Terraform-CI'
       - '.github/workflows/Ansible.yaml'
@@ -14,8 +14,7 @@ on:
     branches:
       - main
     paths:
-      - 'Ansible/**/*.yaml'
-      - 'Ansible/**/**/*.yaml'
+      - 'Ansible/*.yaml'
       - 'terraform/module/**/*.tf'
 
 jobs:
@@ -40,4 +39,5 @@ jobs:
       - name: Run Ansible Playbook
         run: |
           ansible-playbook -i Ansible/inventory.ini Ansible/install_java.yaml
-
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
