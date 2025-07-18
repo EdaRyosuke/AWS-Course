@@ -1,20 +1,48 @@
 name: Ansible
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
     paths:
       - 'Ansible/*.yaml'
       - 'Ansible/*.ini'
       - 'terraform/module/**/*.tf'
-      - '.github/workflows/Terraform-CI'
       - '.github/workflows/Ansible.yaml'
+  push:
+    branches:
+      - main
 
 jobs:
-  install-java:
+  ansible-test:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Install Ansible Lint
+        run: |
+          pip install ansible-lint
+
+      - name: Syntax Check For Playbook
+        run: |
+          ansible-playbook -i Ansible/inventory.ini --syntax-check install_java.yaml
+
+      - name: Lint Playbook
+        run: |
+          ansible-lint Ansible/install_java.yaml
+
+      - name: Ansible Dry Run
+        run: |
+          ansible-playbook -i Ansible/inventory.ini --check install_java.yaml
+
+  install-java:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v4
