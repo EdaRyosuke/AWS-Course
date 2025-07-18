@@ -39,6 +39,8 @@ jobs:
       - name: Ansible Dry Run
         run: |
           ansible-playbook -i Ansible/inventory.ini --check Ansible/install_java.yaml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
 
   install-java:
     runs-on: ubuntu-latest
