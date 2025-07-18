@@ -30,7 +30,7 @@ jobs:
 
       - name: Syntax Check For Playbook
         run: |
-          ansible-playbook -i Ansible/inventory.ini --syntax-check install_java.yaml
+          ansible-playbook -i Ansible/inventory.ini --syntax-check Ansible/install_java.yaml
 
       - name: Lint Playbook
         run: |
@@ -38,7 +38,7 @@ jobs:
 
       - name: Ansible Dry Run
         run: |
-          ansible-playbook -i Ansible/inventory.ini --check install_java.yaml
+          ansible-playbook -i Ansible/inventory.ini --check Ansible/install_java.yaml
 
   install-java:
     runs-on: ubuntu-latest
