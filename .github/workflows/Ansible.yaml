@@ -1,0 +1,73 @@
+name: Ansible
+
+on:
+  pull_request:
+    paths:
+      - 'Ansible/*.yaml'
+      - 'Ansible/*.ini'
+      - 'terraform/module/**/*.tf'
+      - '.github/workflows/Ansible.yaml'
+  push:
+    branches:
+      - main
+
+jobs:
+  ansible-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Install Ansible Lint
+        run: |
+          pip install ansible-lint
+
+      - name: Syntax Check For Playbook
+        run: |
+          ansible-playbook -i Ansible/inventory.ini --syntax-check Ansible/install_java.yaml
+
+      - name: Lint Playbook
+        run: |
+          ansible-lint Ansible/install_java.yaml
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Ansible Dry Run
+        run: |
+          ansible-playbook -i Ansible/inventory.ini --check Ansible/install_java.yaml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+  install-java:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook -i Ansible/inventory.ini Ansible/install_java.yaml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
