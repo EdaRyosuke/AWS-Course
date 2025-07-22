@@ -11,18 +11,21 @@
         mode: '0755'
 
     - name: Uproad myapp.jar
-      copy:
+      ansible.builtin.copy:
         src: app/myapp.jar
         dest: /app/myapp.jar
+        mode: '0644'
 
     - name: Uproad myapp-plain.jar
-      copy:
+      ansible.builtin.copy:
         src: app/myapp-plain.jar
         dest: /app/myapp-plain.jar
+        mode: '0644'
 
     - name: Create systemd service
-      copy:
+      ansible.builtin.copy:
         dest: /etc/systemd/system/myapp.service
+        mode: '0644'
         content: |
           [Unit]
           Description=Java Application myapp
@@ -43,4 +46,4 @@
       ansible.builtin.systemd:
         name: myapp
         state: restarted
-        enabled: yes
+        enabled: true

@@ -44,9 +44,10 @@ jobs:
           echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      - name: Ansible Dry Run (install_java)
+      - name: Ansible Dry Run
         run: |
           ansible-playbook -i Ansible/inventory.ini --check Ansible/install_java.yaml
+          ansible-playbook -i Ansible/inventory.ini --check Ansible/deploy_myapp.yaml
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
