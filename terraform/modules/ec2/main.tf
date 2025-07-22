@@ -48,3 +48,8 @@ resource "aws_instance" "sub" {
     Name = "${var.env}-sub-ec2"
   }
 }
+
+resource "aws_eip" "myeip" {
+  instance = aws_instance.main.id
+  domain = "vpc"
+}

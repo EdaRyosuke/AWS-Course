@@ -31,10 +31,12 @@ jobs:
       - name: Syntax Check For Playbook
         run: |
           ansible-playbook -i Ansible/inventory.ini --syntax-check Ansible/install_java.yaml
+          ansible-playbook -i Ansible/inventory.ini --syntax-check Ansible/deploy_myapp.yaml
 
       - name: Lint Playbook
         run: |
           ansible-lint Ansible/install_java.yaml
+          ansible-lint Ansible/deploy_myapp.yaml
 
       - name: Setup SSH key
         run: |
@@ -42,7 +44,7 @@ jobs:
           echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      - name: Ansible Dry Run
+      - name: Ansible Dry Run (install_java)
         run: |
           ansible-playbook -i Ansible/inventory.ini --check Ansible/install_java.yaml
         env:
@@ -66,8 +68,14 @@ jobs:
           echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      - name: Run Ansible Playbook
+      - name: Run Ansible Playbook (Install java)
         run: |
           ansible-playbook -i Ansible/inventory.ini Ansible/install_java.yaml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+      - name: Run Ansible Playbook (upload and deploy myapp.jar)
+        run: |
+          ansible-playbook -i Ansible/inventory.ini Ansible/deproy_myapp.yaml
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
